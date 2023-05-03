@@ -10,7 +10,6 @@
 int main(int argc, char* argv[]){
     int sockfd, opResult, opCount;
     unsigned char buf[1024];
-    char* md;
     struct sockaddr_in servaddr;
 
     if(argc<3){
@@ -27,10 +26,6 @@ int main(int argc, char* argv[]){
     servaddr.sin_addr.s_addr=inet_addr(argv[2]);
     servaddr.sin_port=htons(atoi(argv[1]));
 
-    printf("Mode : ");
-    scanf("%s", md);
-    if(strcmp(md,"save")==0||strcmp(md,"load")==0||strcmp(md,"quit"))
-
     if(connect(sockfd, (const struct sockaddr*)&servaddr, sizeof(servaddr))){
         perror("connect error");
         return -1;
@@ -43,7 +38,7 @@ int main(int argc, char* argv[]){
         write(sockfd,buf,4);
     }
     if(opCount!=buf[0]){
-        int tmp[1]={opCount};E
+        int tmp[1]={opCount};
         buf[0]='x';
         write(sockfd,buf,1);
         write(sockfd,tmp,4);

@@ -10,11 +10,10 @@
 int main(int argc, char* argv[]){
     int sockfd, opResult, opCount;
     unsigned char buf[1024];
-    char* md;
     struct sockaddr_in servaddr;
 
     if(argc<3){
-        printf("usage : ./client  remotePort remoteAddress\n");
+        printf("usage : ./client remoteAddress remotePort\n");
         return -1;
     }
     
@@ -24,12 +23,8 @@ int main(int argc, char* argv[]){
     }
 
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr=inet_addr(argv[2]);
-    servaddr.sin_port=htons(atoi(argv[1]));
-
-    printf("Mode : ");
-    scanf("%s", md);
-    if(strcmp(md,"save")==0||strcmp(md,"load")==0||strcmp(md,"quit"))
+    servaddr.sin_addr.s_addr=inet_addr(argv[1]);
+    servaddr.sin_port=htons(atoi(argv[2]));
 
     if(connect(sockfd, (const struct sockaddr*)&servaddr, sizeof(servaddr))){
         perror("connect error");
@@ -39,12 +34,9 @@ int main(int argc, char* argv[]){
     printf("Operand Count : ");
     scanf("%d", &opCount);
     buf[0]=(unsigned char)opCount;
-    if(opCount==0){
-        write(sockfd,buf,4);
-    }
     if(opCount!=buf[0]){
-        int tmp[1]={opCount};E
         buf[0]='x';
+        int tmp[1]={opCount};
         write(sockfd,buf,1);
         write(sockfd,tmp,4);
         close(sockfd);
@@ -60,7 +52,7 @@ int main(int argc, char* argv[]){
     }
     write(sockfd, buf, 1+(opCount)*4+(opCount-1));
     read(sockfd, &opResult, 4);
-    if(opCount!=0) printf("Operation Result : %d\n", opResult);
+    printf("Operation Result : %d\n", opResult);
     close(sockfd);
     return 0;
 }

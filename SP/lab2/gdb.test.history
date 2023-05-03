@@ -1,0 +1,27 @@
+set logging file gdb.test.log
+set logging on
+set history filename gdb.test.history
+set history save
+break 5
+run
+s
+s
+s
+s
+s
+print arr[sum[
+print arr[sum]
+s
+s
+run
+r
+s
+s
+s
+s
+print arr[sum]
+s
+print arr[sum]
+s
+s
+q

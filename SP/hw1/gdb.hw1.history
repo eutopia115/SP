@@ -1,0 +1,23 @@
+set logging file gdb.hw1.log
+set logging enabled on
+set history filename gdb.hw1.history
+set history save
+break 5
+run
+n
+n
+n
+n
+n
+n
+n
+n
+n
+print d_D
+n
+n
+print d_D
+n
+q
+n
+q
