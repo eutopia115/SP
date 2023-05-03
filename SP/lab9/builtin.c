@@ -26,6 +26,10 @@ int builtinCommand(char ** args, int* resultp){
     return rv;
 }
 
+int isBuiltinCommand(char ** args){
+    return (strcmp(args[0],"set")==0||strchr(args[0],'=')!=NULL||strcmp(args[0],"export")==0);
+}
+
 int assign(char* str){
     char* cp;
     int rv;

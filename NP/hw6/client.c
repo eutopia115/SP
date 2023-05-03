@@ -10,7 +10,8 @@
 int main(int argc, char* argv[]){
     int sockfd, opResult, opCount;
     unsigned char buf[1024];
-    char* md;
+    struct iovec vec[3];
+    char* md, *id;
     struct sockaddr_in servaddr;
 
     if(argc<3){
@@ -29,7 +30,20 @@ int main(int argc, char* argv[]){
 
     printf("Mode : ");
     scanf("%s", md);
-    if(strcmp(md,"save")==0||strcmp(md,"load")==0||strcmp(md,"quit"))
+    if(!(strcmp(md,"save")==0||strcmp(md,"load")==0||strcmp(md,"quit"))) {
+        printf("supported mode : save load quit");
+        exit(1);
+    }
+    if(strcmp(md,"save")==0||strcmp(md,"load")==0){
+        printf("ID : ");
+        scanf("%s", id);
+        if(strlen(id)!=4) {printf("Error : ID length must be 4"); exit(1);}
+    }
+    
+    vec[0].iov_base = md;
+    vec[0].iov_len = 4;
+    vec[1].iov_base = id;
+    vec[1].iov_len = 4;
 
     if(connect(sockfd, (const struct sockaddr*)&servaddr, sizeof(servaddr))){
         perror("connect error");
