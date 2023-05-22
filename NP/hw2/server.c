@@ -55,7 +55,6 @@ int main(int argc, char* argv[]){
     opCount=(int)(opc);
     printf("Operand Count : %d\n", opCount);
 
-
     for(int i=0; i<opCount; i++){
         read(cSockfd, &operand[i],4);
         printf("Operand %d : %d\n", i, operand[i]);

@@ -12,6 +12,11 @@
 #define COPYMODE 0644
 #define BUF_SIZ 1024
 
+struct x {
+	int index;
+	char* filename;
+}
+
 void mv(char dirname[], char dest[], char ext[]); 
 
 char tmp1[256], tmp2[256];

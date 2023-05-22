@@ -1,7 +1,8 @@
 #include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "Move/move.h"
-#include "Struct/tree.h"
-#include "Print/print_form.h"
 
 #define ESCAPE 27
 #define ENTER 10
@@ -150,16 +151,16 @@ void moveMode(WINDOW *scr){
     mvwprintw(scr,2,2,"*****************************************************************************************");
     mvwprintw(scr,3,2," Press the button to choose option");  
     mvwprintw(scr,4,2," 1. Date Collection"); 
-    mvwprintw(scr,5,2," 2. Extension Collection");     
+    mvwprintw(scr,5,2," 2. strension Collection");     
     mvwprintw(scr,6,2," 3. Date Classify");   
-    mvwprintw(scr,7,2," 4. Extension Filtering");   
+    mvwprintw(scr,7,2," 4. strension Filtering");   
     mvwprintw(scr,8,2," 5. Classify + Filtering");   
     mvwprintw(scr,9,2,"-----------------------------------------------------------------------------------------");   
     mvwprintw(scr,10,2," Option Detail");
     mvwprintw(scr,11,2," 1. collect files which modified time between timeX and timeY from home directory");   
-    mvwprintw(scr,12,2," 2. collect files which extension is same with input from home directory");   
+    mvwprintw(scr,12,2," 2. collect files which strension is same with input from home directory");   
     mvwprintw(scr,13,2," 3. execute option 1 then classify by date from collection");   
-    mvwprintw(scr,14,2," 4. execute option 1 then filter the extension by user input from collection");   
+    mvwprintw(scr,14,2," 4. execute option 1 then filter the strension by user input from collection");   
     mvwprintw(scr,15,2," 5. classify by date + filter by input = option 2 + 3");  
     mvwprintw(scr,16,2,"****************************************************************************************");   
     mvwprintw(scr,17,2," README");
@@ -182,16 +183,16 @@ void copyMode(WINDOW *scr){
     mvwprintw(scr,2,2,"*****************************************************************************************");
     mvwprintw(scr,3,2," Press the button to choose option");  
     mvwprintw(scr,4,2," 1. Date Collection"); 
-    mvwprintw(scr,5,2," 2. Extension Collection");     
+    mvwprintw(scr,5,2," 2. strension Collection");     
     mvwprintw(scr,6,2," 3. Date Classify");   
-    mvwprintw(scr,7,2," 4. Extension Filtering");   
+    mvwprintw(scr,7,2," 4. strension Filtering");   
     mvwprintw(scr,8,2," 5. Classify + Filtering");   
     mvwprintw(scr,9,2,"-----------------------------------------------------------------------------------------");   
     mvwprintw(scr,10,2," Option Detail");
     mvwprintw(scr,11,2," 1. collect files which modified time between timeX and timeY from home directory");   
-    mvwprintw(scr,12,2," 2. collect files which extension is same with input from home directory");   
+    mvwprintw(scr,12,2," 2. collect files which strension is same with input from home directory");   
     mvwprintw(scr,13,2," 3. execute option 1 then classify by date from collection");   
-    mvwprintw(scr,14,2," 4. execute option 1 then filter the extension by user input from collection");   
+    mvwprintw(scr,14,2," 4. execute option 1 then filter the strension by user input from collection");   
     mvwprintw(scr,15,2," 5. classify by date + filter by input = option 2 + 3");  
     mvwprintw(scr,16,2,"****************************************************************************************");  
     mvwprintw(scr,17,2," README");
@@ -238,6 +239,7 @@ void credit(WINDOW *scr){
 
 void moveOpt1(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     echo();
     werase(scr);
     mvwprintw(scr,1,2,"Option 1: Date Collection");
@@ -258,21 +260,26 @@ void moveOpt1(WINDOW *scr){
     mvwprintw(scr,11,2," Date : ");   
     mvwscanw(scr,11,12,"%d", &yDate);  
     mvwprintw(scr,12,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
+    Selecting_time_distance(".", &start, &end);
 
 }
 void moveOpt2(WINDOW *scr){
-    char* ext;
+    char* str;
     echo();
     werase(scr);
-    mvwprintw(scr,1,2,"Option 2 : Extension Collection");
+    mvwprintw(scr,1,2,"Option 2 : extension Collection");
     mvwprintw(scr,2,2,"----------------------------------------------------------------");
     mvwprintw(scr,3,2," String that name include (for instance : .c, .java)"); 
     mvwprintw(scr,4,2," String : ");  
-    mvwscanw(scr,4,12,"%s", ext); 
+    mvwscanw(scr,4,12,"%s", str); 
     mvwprintw(scr,5,2,"---------------------------------------------------------------");
+    Name_find(".", str);
 }
 void moveOpt3(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     echo();
     werase(scr);
     mvwprintw(scr,1,2,"Option 3 : Date Classify");
@@ -293,13 +300,16 @@ void moveOpt3(WINDOW *scr){
     mvwprintw(scr,11,2," Date : ");   
     mvwscanw(scr,11,12,"%d", &yDate);  
     mvwprintw(scr,12,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
 }
 void moveOpt4(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate, status;
-    char* ext;
+    char* str;
+    time_t start, end;
     echo();
     werase(scr);
-    mvwprintw(scr,1,2,"Option 4 : Extension Filtering");
+    mvwprintw(scr,1,2,"Option 4 : extension Filtering");
     mvwprintw(scr,2,2,"----------------------------------------------------------------");
     mvwprintw(scr,3,2," start time (distant past)");  
     mvwprintw(scr,4,2," Year : ");  
@@ -319,12 +329,16 @@ void moveOpt4(WINDOW *scr){
     mvwprintw(scr,12,2,"---------------------------------------------------------------");
     mvwprintw(scr,13,2," String that name include (for instance : .c, .java, ID)"); 
     mvwprintw(scr,14,2," String : ");  
-    mvwscanw(scr,14,12,"%s", ext); 
+    mvwscanw(scr,14,12,"%s", str); 
     mvwprintw(scr,15,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
+    Name_find(".", str);
 }
 void moveOpt5(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
     char* str;
+    time_t start, end;
     echo();
     werase(scr);
     mvwprintw(scr,1,2,"Option 4 : Classify + Filtering");
@@ -349,10 +363,14 @@ void moveOpt5(WINDOW *scr){
     mvwprintw(scr,14,2," String : ");  
     mvwscanw(scr,14,12,"%s", str); 
     mvwprintw(scr,15,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
+    Name_find(".", str);
 }
 
 void copyOpt1(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     echo();
     werase(scr);
     mvwprintw(scr,1,2,"Option 1 : Date Collection");
@@ -373,20 +391,24 @@ void copyOpt1(WINDOW *scr){
     mvwprintw(scr,11,2," Date : ");   
     mvwscanw(scr,11,12,"%d", &yDate);  
     mvwprintw(scr,12,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
 }
 void copyOpt2(WINDOW *scr){
-    char* ext;
+    char* str;
     echo();
     werase(scr);
-    mvwprintw(scr,1,2,"Option 2 : Extension Collection");
+    mvwprintw(scr,1,2,"Option 2 : extension Collection");
     mvwprintw(scr,2,2,"----------------------------------------------------------------");
     mvwprintw(scr,3,2," String that name include (for instance : .c, .java)"); 
     mvwprintw(scr,4,2," String : ");  
-    mvwscanw(scr,4,12,"%s", ext); 
+    mvwscanw(scr,4,12,"%s", str); 
     mvwprintw(scr,5,2,"---------------------------------------------------------------");
+    Name_find(".", str);
 }
 void copyOpt3(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     echo();
     werase(scr);
     mvwprintw(scr,1,2,"Option 3 : Date Classify");
@@ -407,13 +429,16 @@ void copyOpt3(WINDOW *scr){
     mvwprintw(scr,11,2," Date : ");   
     mvwscanw(scr,11,12,"%d", &yDate);  
     mvwprintw(scr,12,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
 }
 void copyOpt4(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     char* str;
     echo();
     werase(scr);
-    mvwprintw(scr,1,2,"Option 4 : Extension Filtering");
+    mvwprintw(scr,1,2,"Option 4 : extension Filtering");
     mvwprintw(scr,2,2,"----------------------------------------------------------------");
     mvwprintw(scr,3,2," start time (distant past)");  
     mvwprintw(scr,4,2," Year : ");  
@@ -435,9 +460,13 @@ void copyOpt4(WINDOW *scr){
     mvwprintw(scr,14,2," String : ");  
     mvwscanw(scr,14,12,"%s", str); 
     mvwprintw(scr,15,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
+    Name_find(".", str);
 }
 void copyOpt5(WINDOW *scr){
     int xYear, xMon, xDate, yYear, yMon, yDate;
+    time_t start, end;
     char* str;
     echo();
     werase(scr);
@@ -463,4 +492,7 @@ void copyOpt5(WINDOW *scr){
     mvwprintw(scr,14,2," String : ");  
     mvwscanw(scr,14,12,"%s", str); 
     mvwprintw(scr,15,2,"---------------------------------------------------------------");
+    start = MakeLocalTime_t(xYear, xMon, xDate);
+    end = MakeLocalTime_t(yYear, yMon, yDate);
+    Name_find(".", str);
 }

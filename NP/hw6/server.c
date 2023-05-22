@@ -1,5 +1,3 @@
-//과제를 0을 받은 이후에도 클라이언트에는 계산결과가 출력되도록 하는 것으로 이해하여 코딩했습니다.
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,20 +5,36 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/select.h>
 #include <signal.h>
+#include <sys/uio.h>
 
 int operation(int x, int y, char op);
 void chldhandler();
-int end=0;
 
 struct sigaction newhandler;
 
+int sockfd, cSockfd;
+
 int main(int argc, char* argv[]){
-    int sockfd, cSockfd, opCount, result=0, operand[128], fds[2];
-    unsigned char buf[1024], operator[127], opc, ansstr[1024], tmp[5];
     struct sockaddr_in servaddr, cliaddr;
-    pid_t pid;
+    struct timeval timeout;
+    struct iovec vec[3];
     socklen_t len;
+    fd_set reads, cpyReads;
+    pid_t pid;
+    int fdMax, strlen, fdNum, opCount, i, result, lenv, operand[BUFSIZ], fds1[2], fds2[2];
+    char md[5], id[5], buf[BUFSIZ], operator[BUFSIZ], ansstr[BUFSIZ], tmp[5];
+    
+    vec[0].iov_base = md;
+    vec[1].iov_base = id;
+    vec[2].iov_base = buf;
+    vec[0].iov_len = 4;
+    vec[1].iov_len = 4;
+    vec[2].iov_len = BUFSIZ;
+    pipe(fds1);
+    pipe(fds2);
     
     newhandler.sa_handler = chldhandler;
     sigemptyset(&newhandler.sa_mask);
@@ -32,14 +46,13 @@ int main(int argc, char* argv[]){
         return -1;
     }
     
-    if((sockfd = socket(AF_INET, SOCK_STREAM, 0))<0){
+    if((sockfd = socket(PF_INET, SOCK_STREAM, 0))<0){
         perror("socket creation failed");
         return -1;
     }
 
     int enable =1;
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
-
+    memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
     servaddr.sin_port=htons(atoi(argv[1]));
@@ -53,100 +66,127 @@ int main(int argc, char* argv[]){
         perror("socket failed");
         return -1;
     }
-    while(1){
-    if((cSockfd=accept(sockfd,(struct sockaddr*)&cliaddr, &len))<0){
-        continue;
-    }
-    if(end==0) {
-        printf("new client connected...\n"); 
-        pipe(fds);
-        pid=fork();
-    }
-    if(pid == -1) {close(cSockfd); continue;}
-    if(pid == 0){
-        close(sockfd);
-        int i=0;
-        FILE* fp = fopen("log.txt","a+");;
-        char cldbuf[BUFSIZ];
-        read(fds[0],cldbuf,BUFSIZ); 
-        for(i=0; cldbuf[i]!='\0'; i++);
-        if (cldbuf[0]=='x'){
-            int tmp=0;
-            tmp+=cldbuf[1];
-            tmp+=cldbuf[2]*256;
-            tmp+=cldbuf[3]*256*256;
-            tmp+=cldbuf[4]*256*256*256;
-            printf("Save File(%d)\n", tmp);
-            close(cSockfd);
-            exit(0);
-        }
-        fwrite(cldbuf,sizeof(char),i,fp);
-        fclose(fp);
-        close(cSockfd);
-        exit(0);
-    }
-    else {
-        read(cSockfd, &opc, 1);
-        if(opc=='x') {
-            read(cSockfd,&opCount,4);
-            printf("Server Close(%d)\n", opCount);
-            close(cSockfd);
-            close(sockfd);
-            exit(1);
-        }
-        opCount=(int)(opc);
-        if(opCount<=0) {
-            char tmpbuf[5];
-            tmpbuf[0]='x';
-            tmpbuf[1] = opCount;
-            tmpbuf[2] = opCount >> 8 ;
-            tmpbuf[3] = opCount >> 16 ;
-            tmpbuf[4] = opCount >> 24 ;
-            write(fds[1], tmpbuf, 5);
-            end=1;
-            close(cSockfd);
-            continue;
-        }
-        for(int i=0; i<opCount; i++){
-            read(cSockfd, &operand[i],4);
-        }
-        for(int i=0; i<opCount-1; i++){
-            read(cSockfd, &operator[i],1);
-        }
-        result=operand[0];
-        for(int i=0; i<opCount-1; i++){
-            result=operation(result, operand[i+1], operator[i]); 
-        }
-        if(end==0){
-            sprintf(ansstr, "%d : " , (int)pid);
-            sprintf(tmp, "%d" ,operand[0]);
-            strcat(ansstr,tmp);
-            for(int i=0; i<opCount-1; i++){
-                sprintf(tmp, "%c%d", operator[i], operand[i+1]);
-                strcat(ansstr,tmp);
-            }
-            sprintf(tmp, "=%d\n", result);
-            strcat(ansstr,tmp);
-            printf("%s",ansstr);
-            write(fds[1], ansstr, strlen(ansstr));
-        }
-        write(cSockfd, &result, 4);
-        close(cSockfd);
-    }
-    }
-    close(sockfd);
-}
 
-int operation(int x, int y, char op){
-    switch (op){
-        case '+': return x + y;
-        case '-': return x - y;
-        case '*': return x * y;
+    FD_ZERO(&reads);
+    FD_SET(sockfd, &reads); 
+    fdMax=sockfd;
+    while(1){
+        cpyReads=reads;
+        timeout.tv_sec=5;
+        timeout.tv_usec=5000;
+        if((fdNum=select(fdMax+1, &cpyReads, 0, 0, &timeout))==-1) break;
+        if(fdNum==0) continue;
+        for(i=0; i<fdMax+1; i++){
+            if(FD_ISSET(i, &cpyReads)){
+                if(i==sockfd){
+                    len=sizeof(cliaddr);
+                    cSockfd=accept(sockfd,(struct sockaddr*)&cliaddr, &len);
+                    FD_SET(cSockfd, &reads);
+                    if(fdMax < cSockfd) fdMax=cSockfd;
+                    printf("connected client : %d\n", cSockfd); 
+                }
+                else{
+                    lenv=readv(cSockfd, vec, 3);
+                    opCount=(int)buf[0];
+                    for(int i=0; i<opCount; i++){
+                        operand[i]=buf[(i*4)+1];
+                        operand[i]=buf[(i*4+1)+1]<<8;
+                        operand[i]=buf[(i*4+2)+1]<<16;
+                        operand[i]=buf[(i*4+3)+1]<<24;
+                    }
+                    for(int i=0; i<opCount-1; i++){
+                        operator[i]=buf[(opCount*4)+i+1];
+                    }
+                    if(lenv==0){
+                        FD_CLR(i,&reads);
+                        close(i);
+                        printf("closed client : %d\n", i);   
+                    }
+                    else{
+                        if(strcmp(md,"save")==0) {
+                            pid=fork();
+                            if(pid == 0){
+                                close(sockfd);
+                                int i=0;
+                                FILE* fp = fopen("saved.txt","a+");;
+                                char cldbuf[BUFSIZ];
+                                read(fds1[0],cldbuf,BUFSIZ); 
+                                for(i=0; cldbuf[i]!='\0'; i++);
+                                fwrite(cldbuf,sizeof(char),i,fp);
+                                fclose(fp);
+                                printf("save to %c%c%c%c\n", cldbuf[0], cldbuf[1], cldbuf[2], cldbuf[3]);
+                                close(cSockfd);
+                                exit(0);
+                            }
+                            else {
+                                result=operand[0];
+                                for(int i=0; i<opCount-1; i++){
+                                    result=operation(result, operand[i+1], operator[i]); 
+                                }
+                                sprintf(ansstr, "%s : " , id);
+                                sprintf(tmp, "%d", operand[0]);
+                                strcat(ansstr,tmp);
+                                for(int i=0; i<opCount-1; i++){
+                                    sprintf(tmp, "%c%d", operator[i], operand[i]);
+                                    strcat(ansstr,tmp);
+                                }
+                                sprintf(tmp, "=%d\n", result);
+                                strcat(ansstr,tmp);
+                                write(fds1[1], ansstr, BUFSIZ);
+                                write(cSockfd, &result, 4);
+                                close(cSockfd);
+                            }
+                        }
+                        else if(strcmp(md,"load")==0) {
+                            pid=fork();
+                            if(pid == 0){
+                                close(sockfd);
+                                int i=0, j=0;
+                                FILE* fp = fopen("saved.txt","r");;
+                                char cldbuf[BUFSIZ], tmp[BUFSIZ], givenid[5], line[BUFSIZ];
+                                char ans[BUFSIZ] = "";
+                                read(fds1[0], givenid, 4);
+                                while(fgets(line,128,fp)){
+                                    if(strstr(line,givenid)!=0)
+                                        strcat(ans,line);
+                                }
+                                write(fds2[1],ans,BUFSIZ); 
+                                fclose(fp);
+                                printf("load from %s\n", givenid);
+                                close(cSockfd);
+                                exit(0);
+                            }
+                            else {
+                                char parbuf[BUFSIZ];
+                                write(fds1[1], id, 4);
+                                read(fds2[0], parbuf, BUFSIZ);
+                                write(cSockfd, parbuf, BUFSIZ);
+                                printf("closed client : %d\n", cSockfd); 
+                                close(cSockfd);
+                            }
+                        }
+                        else if(strcmp(md,"quit")==0) {
+                            pid=fork();
+                            if(pid == 0){
+                                close(sockfd);
+                                close(cSockfd);
+                                exit(0);
+                            }
+                            else close(cSockfd);   
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        close(sockfd);
     }
+    
+
+
 }
 
 void chldhandler(){
     int status;
     pid_t pid=waitpid(-1, &status, WNOHANG);
-    printf("removed proc id : %d\n", pid);
 }
