@@ -1,0 +1,24 @@
+Breakpoint 1 at 0x11dc: file factorization_org.c, line 13.
+Starting program: /home/eutopia115/WorkSpace/SP/hw1_s2021115360/factorization_org 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main (argc=1, argv=0x7fffffffe218) at factorization_org.c:13
+13	int main(int argc, char* argv[]){
+17		printf("aX^2 + bX + c = 0\n");
+19		printf("a: ");
+20		scanf("%d", &i_a);
+22		printf("b: ");
+23		scanf("%d", &i_b);
+25		printf("c: ");
+26		scanf("%d", &i_c);
+28		d_D = 4*i_a*i_c + i_b*i_b;
+29		if(d_D < 0){
+$1 = 8
+35			printf("Doesn't make sense\n");
+36		return 0;
+$2 = 8
+37	}
+Not confirmed.
+__libc_start_call_main (main=main@entry=0x5555555551c9 <main>, argc=argc@entry=1, argv=argv@entry=0x7fffffffe218) at ../sysdeps/nptl/libc_start_call_main.h:74
+74	../sysdeps/nptl/libc_start_call_main.h: No such file or directory.

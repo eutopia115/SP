@@ -1,0 +1,41 @@
+Breakpoint 1 at 0x1164: file test.c, line 6.
+Starting program: /home/eutopia115/WorkSpace/SP/lab2_s2021115360/test 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:6
+6		a=0;
+7		b=10;
+8		int sum=a+b;
+9		a=5;
+12		arr[sum]=1;
+13		return 0;
+A syntax error in expression, near `'.
+$1 = 1
+14	}
+Warning:
+Cannot insert breakpoint 0.
+Cannot access memory at address 0x0
+
+0x00007fff00000001 in ?? ()
+Starting program: /home/eutopia115/WorkSpace/SP/lab2_s2021115360/test 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:6
+6		a=0;
+Please answer y or n.
+Program not restarted.
+7		b=10;
+8		int sum=a+b;
+9		a=5;
+12		arr[sum]=1;
+$2 = -136610416
+13		return 0;
+$3 = 1
+14	}
+Warning:
+Cannot insert breakpoint 0.
+Cannot access memory at address 0x0
+
+0x00007fff00000001 in ?? ()
